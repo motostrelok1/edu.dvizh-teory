@@ -21,6 +21,23 @@ jobs:
           npm ci
           npm run build
 
+      - name: SSH diagnostics
+        env:
+          VDS_HOST: ${{ secrets.VDS_HOST }}
+          VDS_USER: ${{ secrets.VDS_USER }}
+          SSH_KEY: ${{ secrets.VDS_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "== ключ: отпечаток (сверить с сервером) =="
+          ssh-keygen -lf ~/.ssh/deploy_key || echo "КЛЮЧ НЕВАЛИДЕН"
+          echo "== хост: ${VDS_HOST} (первые/последние символы скрыты) =="
+          echo "длина VDS_HOST=${#VDS_HOST}, VDS_USER=${VDS_USER}"
+          ssh-keyscan -H "$VDS_HOST" >> ~/.ssh/known_hosts 2>&1 || echo "KEYSCAN НЕУДАЧЕН"
+          echo "== пробное подключение =="
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o ConnectTimeout=10 "$VDS_USER@$VDS_HOST" "echo SSH_OK" || echo "SSH_FAILED code=$?"
+
       - name: Deploy to VDS via rsync
         env:
           VDS_HOST: ${{ secrets.VDS_HOST }}

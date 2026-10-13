@@ -20,4 +20,12 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  // shadcn/ui exports component helpers alongside components; Refs exports its hook.
+  // Limit this exception to the existing mixed-export files.
+  {
+    files: ['src/components/ui/**/*.{ts,tsx}', 'src/components/Refs.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])
